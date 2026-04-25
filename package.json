@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "build": "vite build",
-    "start": "node dist/server/server.js",
+    "start": "node serve.js",
     "preview": "vite preview",
     "test": "vitest run",
     "format": "biome format",
