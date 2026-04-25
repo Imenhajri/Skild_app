@@ -36,9 +36,13 @@ createServer(async (req, res) => {
     method: req.method,
     headers: req.headers,
   })
-  const response = await app.fetch(request)
-  res.writeHead(response.status, Object.fromEntries(response.headers))
-  res.end(Buffer.from(await response.arrayBuffer()))
-}).listen(port, () => {
-  console.log(`Listening on http://0.0.0.0:${port}`)
+const response = await app.fetch(request)
+
+// Forward all headers including Set-Cookie
+const headers = {}
+response.headers.forEach((value, key) => {
+  headers[key] = value
 })
+
+res.writeHead(response.status, headers)
+res.end(Buffer.from(await response.arrayBuffer()))
