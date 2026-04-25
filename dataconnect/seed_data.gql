@@ -1,0 +1,89 @@
+mutation CreateDemoData @transaction @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public") {
+  user_insertMany(data: [
+    {
+      id: "00000000-0000-0000-0000-000000000001",
+      displayName: "Alice Smith",
+      email: "alice.smith@example.com",
+      createdAt: "2023-01-01T10:00:00Z",
+      bio: "An enthusiastic learner interested in new skills.",
+      profilePictureUrl: "https://example.com/alice.jpg"
+    },
+    {
+      id: "00000000-0000-0000-0000-000000000002",
+      displayName: "Bob Johnson",
+      email: "bob.johnson@example.com",
+      createdAt: "2023-01-02T11:00:00Z",
+      bio: "Experienced teacher looking to share knowledge.",
+      profilePictureUrl: "https://example.com/bob.jpg"
+    }
+  ])
+  skill_insertMany(data: [
+    {
+      id: "00000000-0000-0000-0000-000000000003",
+      name: "Guitar Playing",
+      category: "Music",
+      createdAt: "2023-01-03T12:00:00Z",
+      description: "Learn to play acoustic and electric guitar.",
+      imageUrl: "https://example.com/guitar.jpg"
+    },
+    {
+      id: "00000000-0000-0000-0000-000000000004",
+      name: "Web Development (React)",
+      category: "Programming",
+      createdAt: "2023-01-04T13:00:00Z",
+      description: "Master front-end web development with React.",
+      imageUrl: "https://example.com/react.jpg"
+    }
+  ])
+  userSkill_insertMany(data: [
+    {
+      userId: "00000000-0000-0000-0000-000000000001",
+      skillId: "00000000-0000-0000-0000-000000000003",
+      type: "LEARNER",
+      createdAt: "2023-01-05T14:00:00Z",
+      proficiencyLevel: "Beginner",
+      selfDescriptionOfSkill: "Just starting out with guitar."
+    },
+    {
+      userId: "00000000-0000-0000-0000-000000000002",
+      skillId: "00000000-0000-0000-0000-000000000003",
+      type: "TEACHER",
+      createdAt: "2023-01-06T15:00:00Z",
+      proficiencyLevel: "Advanced",
+      selfDescriptionOfSkill: "Can teach various styles of guitar."
+    },
+    {
+      userId: "00000000-0000-0000-0000-000000000001",
+      skillId: "00000000-0000-0000-0000-000000000004",
+      type: "LEARNER",
+      createdAt: "2023-01-07T16:00:00Z",
+      proficiencyLevel: "Intermediate",
+      selfDescriptionOfSkill: "Looking to improve my React skills."
+    }
+  ])
+  session_insertMany(data: [
+    {
+      id: "00000000-0000-0000-0000-000000000005",
+      learnerId: "00000000-0000-0000-0000-000000000001",
+      teacherId: "00000000-0000-0000-0000-000000000002",
+      skillId: "00000000-0000-0000-0000-000000000003",
+      sessionId: "sess-001",
+      startTime: "2023-02-01T10:00:00Z",
+      endTime: "2023-02-01T11:00:00Z",
+      status: "COMPLETED",
+      createdAt: "2023-01-08T17:00:00Z",
+      location: "Online",
+      notes: "First guitar lesson."
+    }
+  ])
+  review_insertMany(data: [
+    {
+      sessionId: "00000000-0000-0000-0000-000000000005",
+      reviewerId: "00000000-0000-0000-0000-000000000001",
+      reviewedUserId: "00000000-0000-0000-0000-000000000002",
+      rating: 5,
+      createdAt: "2023-02-01T11:30:00Z",
+      comment: "Great teacher, very patient and clear explanations."
+    }
+  ])
+}

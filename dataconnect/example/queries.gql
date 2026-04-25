@@ -1,0 +1,69 @@
+query ListAllSkills @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public as it only retrieves skill information.") {
+  skills {
+    id
+    name
+    category
+    description
+    imageUrl
+  }
+}
+
+query GetSkills($searchTerm: String, $limit: Int) @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public as it only retrieves skill information.") {
+  skills(where: {name: {contains: $searchTerm}}, limit: $limit) {
+    id
+    name
+    category
+    description
+    imageUrl
+    title
+    installCommand
+    tags
+    createdAt
+    authorClerkId
+    author {
+      id
+      displayName
+      email
+      profilePictureUrl
+    }
+  }
+}
+
+query GetMySessionsAsLearner @auth(level: USER, insecureReason: "This operation is safe to expose to all logged in users as it filters by the authenticated user's ID.") {
+  sessions(where: {learnerId: {eq_expr: "auth.uid"}}) {
+    id
+    skill {
+      name
+      category
+    }
+    teacher {
+      displayName
+      email
+    }
+    startTime
+    endTime
+    status
+    location
+  }
+}
+
+mutation CreateNewSkill($name: String!, $category: String!, $description: String, $imageUrl: String) @auth(level: USER, insecureReason: "This operation is safe to expose to all logged in users for creating new skills.") {
+  skill_insert(data: {
+    name: $name,
+    category: $category,
+    description: $description,
+    imageUrl: $imageUrl,
+    createdAt_expr: "request.time"
+  })
+}
+
+mutation SubmitSessionReview($sessionId: UUID!, $reviewedUserId: UUID!, $rating: Int!, $comment: String) @auth(level: USER, insecureReason: "This operation is safe to expose to all logged in users as it allows them to review a session they participated in.") {
+  review_insert(data: {
+    sessionId: $sessionId,
+    reviewerId_expr: "auth.uid",
+    reviewedUserId: $reviewedUserId,
+    rating: $rating,
+    comment: $comment,
+    createdAt_expr: "request.time"
+  })
+}

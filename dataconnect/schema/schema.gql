@@ -1,0 +1,55 @@
+type User @table {
+  displayName: String!
+  email: String!
+  createdAt: Timestamp!
+  bio: String
+  profilePictureUrl: String
+  averageRatingAsLearner: Float
+  averageRatingAsTeacher: Float
+}
+
+type Skill @table {
+  name: String!
+  category: String!
+  createdAt: Timestamp!
+  description: String
+  imageUrl: String
+  authorClerkId: String
+  installCommand: String
+  promptConfig: String
+  tags: [String!]
+  title: String
+  usageExample: String
+  author: User
+}
+
+type UserSkill @table(key: ["user", "skill"]) {
+  user: User!
+  skill: Skill!
+  type: String!
+  createdAt: Timestamp!
+  proficiencyLevel: String
+  selfDescriptionOfSkill: String
+}
+
+type Session @table {
+  learner: User!
+  teacher: User!
+  skill: Skill!
+  sessionId: UUID!
+  startTime: Timestamp!
+  endTime: Timestamp!
+  status: String!
+  createdAt: Timestamp!
+  location: String
+  notes: String
+}
+
+type Review @table {
+  session: Session!
+  reviewer: User!
+  reviewedUser: User!
+  rating: Int!
+  createdAt: Timestamp!
+  comment: String
+}
