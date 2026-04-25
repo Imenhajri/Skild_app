@@ -11,7 +11,6 @@ const mimeTypes = {
   '.js': 'application/javascript',
   '.css': 'text/css',
   '.html': 'text/html',
-  // ... add other types as needed
 };
 
 createServer(async (req, res) => {
@@ -30,21 +29,45 @@ createServer(async (req, res) => {
   const host = req.headers.host;
   const fullUrl = `${protocol}://${host}${req.url}`;
 
-  // *** CRITICAL FIX FOR NODE 20 ***
-  const requestOptions = {
-    method: req.method,
-    headers: req.headers,
-    duplex: 'half', // <-- THIS LINE IS REQUIRED
-  };
-
-  // Add body for non-GET requests
+  // Collect body first for ALL methods (needed for content-length accuracy)
+  const chunks = [];
   if (req.method !== 'GET' && req.method !== 'HEAD') {
-    const chunks = [];
     for await (const chunk of req) {
       chunks.push(chunk);
     }
-    requestOptions.body = Buffer.concat(chunks);
   }
+  const body = chunks.length > 0 ? Buffer.concat(chunks) : undefined;
+
+  // Build clean headers — exclude headers that cause conflicts
+  const forbiddenHeaders = new Set([
+    'host',
+    'connection',
+    'keep-alive',
+    'transfer-encoding', // May conflict with buffered body
+    'upgrade',
+    'proxy-connection',
+  ]);
+
+  const cleanHeaders = {};
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (!forbiddenHeaders.has(key.toLowerCase())) {
+      cleanHeaders[key] = value;
+    }
+  }
+
+  // Fix content-length to match the buffered body
+  if (body) {
+    cleanHeaders['content-length'] = String(body.byteLength);
+  } else {
+    delete cleanHeaders['content-length'];
+  }
+
+  const requestOptions = {
+    method: req.method,
+    headers: cleanHeaders,
+    duplex: 'half',
+    ...(body && { body }),
+  };
 
   try {
     const request = new Request(fullUrl, requestOptions);
@@ -56,8 +79,8 @@ createServer(async (req, res) => {
     });
 
     res.writeHead(response.status, headers);
-    const body = await response.arrayBuffer();
-    res.end(Buffer.from(body));
+    const responseBody = await response.arrayBuffer();
+    res.end(Buffer.from(responseBody));
   } catch (error) {
     console.error('Request error:', error);
     res.writeHead(500, { 'Content-Type': 'text/html' });
