@@ -7,7 +7,7 @@
   "tailwind": true,
   "addOnOptions": {},
   "envVarValues": {
-    "VITE_CLERK_PUBLISHABLE_KEY": "pk_test_cHJvLXNocmV3LTUwLmNsZXJrLmFjY291bnRzLmRldiQ"
+    "VITE_CLERK_PUBLISHABLE_KEY": "pk_test_cmVzdGVkLXBlZ2FzdXMtODcuY2xlcmsuYWNjb3VudHMuZGV2JA"
   },
   "git": true,
   "routerOnly": false,
