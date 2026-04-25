@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "vite dev --port 3000",
-    "build": "vite build",
+    "build": "vinxi build",
     "preview": "vite preview",
     "test": "vitest run",
     "format": "biome format",
