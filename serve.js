@@ -30,12 +30,17 @@ createServer(async (req, res) => {
     return
   }
 
-  // Fall through to SSR
-  const url = `http://${req.headers.host}${req.url}`
-  const request = new Request(url, {
+  // Fall through to SSR - preserve the full URL with query parameters
+  const protocol = req.headers['x-forwarded-proto'] || 'http'
+  const host = req.headers.host
+  const fullUrl = `${protocol}://${host}${req.url}`
+
+  const request = new Request(fullUrl, {
     method: req.method,
     headers: req.headers,
+    body: req.method !== 'GET' && req.method !== 'HEAD' ? req : undefined,
   })
+
   const response = await app.fetch(request)
 
   // Forward all headers including Set-Cookie
@@ -45,7 +50,10 @@ createServer(async (req, res) => {
   })
 
   res.writeHead(response.status, headers)
-  res.end(Buffer.from(await response.arrayBuffer()))
+
+  // Handle the response body properly
+  const body = await response.arrayBuffer()
+  res.end(Buffer.from(body))
 }).listen(port, () => {
   console.log(`Server running on port ${port}`)
 })
