@@ -20,7 +20,7 @@ const mimeTypes = {
 }
 
 createServer(async (req, res) => {
-  // 1. Serve static files (CSS, JS, images)
+  // Serve static files first
   const staticPath = join(clientDir, req.url.split('?')[0])
   if (existsSync(staticPath) && !staticPath.endsWith('/')) {
     const ext = extname(staticPath)
@@ -30,34 +30,55 @@ createServer(async (req, res) => {
     return
   }
 
-  // 2. Handle SSR and API routes
+  // Handle SSR - preserve full URL including query parameters
   const protocol = req.headers['x-forwarded-proto'] || 'http'
   const host = req.headers.host
   const fullUrl = `${protocol}://${host}${req.url}`
 
-  // CRITICAL FIX: Added 'duplex' option for Node.js compatibility
+  // CRITICAL FIX: Add duplex option for Node.js 20
   const requestOptions = {
     method: req.method,
     headers: req.headers,
-    duplex: 'half', // Required for Node.js 20+
+    duplex: 'half', // This line is REQUIRED
   }
 
+  // Add body for non-GET requests
   if (req.method !== 'GET' && req.method !== 'HEAD') {
-    requestOptions.body = req
+    const chunks = []
+    for await (const chunk of req) {
+      chunks.push(chunk)
+    }
+    requestOptions.body = Buffer.concat(chunks)
   }
 
-  const request = new Request(fullUrl, requestOptions)
-  const response = await app.fetch(request)
+  try {
+    const request = new Request(fullUrl, requestOptions)
+    const response = await app.fetch(request)
 
-  // Forward headers (including Clerk auth cookies)
-  const headers = {}
-  response.headers.forEach((value, key) => {
-    headers[key] = value
-  })
+    // Forward all headers (critical for Clerk cookies)
+    const headers = {}
+    response.headers.forEach((value, key) => {
+      headers[key] = value
+    })
 
-  res.writeHead(response.status, headers)
-  const body = await response.arrayBuffer()
-  res.end(Buffer.from(body))
+    res.writeHead(response.status, headers)
+    const body = await response.arrayBuffer()
+    res.end(Buffer.from(body))
+  } catch (error) {
+    console.error('Error handling request:', error)
+    // Return a proper error page instead of crashing
+    res.writeHead(500, { 'Content-Type': 'text/html' })
+    res.end(`
+      <!DOCTYPE html>
+      <html>
+        <head><title>Error</title></head>
+        <body>
+          <h1>Something went wrong</h1>
+          <p>Please try again or contact support.</p>
+        </body>
+      </html>
+    `)
+  }
 }).listen(port, () => {
   console.log(`Server running on port ${port}`)
 })
