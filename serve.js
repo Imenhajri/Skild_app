@@ -36,13 +36,16 @@ createServer(async (req, res) => {
     method: req.method,
     headers: req.headers,
   })
-const response = await app.fetch(request)
+  const response = await app.fetch(request)
 
-// Forward all headers including Set-Cookie
-const headers = {}
-response.headers.forEach((value, key) => {
-  headers[key] = value
+  // Forward all headers including Set-Cookie
+  const headers = {}
+  response.headers.forEach((value, key) => {
+    headers[key] = value
+  })
+
+  res.writeHead(response.status, headers)
+  res.end(Buffer.from(await response.arrayBuffer()))
+}).listen(port, () => {
+  console.log(`Server running on port ${port}`)
 })
-
-res.writeHead(response.status, headers)
-res.end(Buffer.from(await response.arrayBuffer()))
