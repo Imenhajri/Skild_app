@@ -1,9 +1,19 @@
-import { toNodeHandler } from 'h3-v2'
-import { handler } from './dist/server/server.js'
+import { createServer } from 'node:http'
+import app from './dist/server/server.js'
 
 const port = process.env.PORT || 3000
 
-import { createServer } from 'node:http'
-createServer(toNodeHandler(handler)).listen(port, () => {
+createServer(async (req, res) => {
+  const url = `http://${req.headers.host}${req.url}`
+  const request = new Request(url, {
+    method: req.method,
+    headers: req.headers,
+  })
+
+  const response = await app.fetch(request)
+
+  res.writeHead(response.status, Object.fromEntries(response.headers))
+  res.end(Buffer.from(await response.arrayBuffer()))
+}).listen(port, () => {
   console.log(`Listening on http://0.0.0.0:${port}`)
 })
