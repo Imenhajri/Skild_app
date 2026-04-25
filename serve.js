@@ -20,7 +20,7 @@ const mimeTypes = {
 }
 
 createServer(async (req, res) => {
-  // Try to serve static files first
+  // 1. Serve static files (CSS, JS, images)
   const staticPath = join(clientDir, req.url.split('?')[0])
   if (existsSync(staticPath) && !staticPath.endsWith('/')) {
     const ext = extname(staticPath)
@@ -30,28 +30,32 @@ createServer(async (req, res) => {
     return
   }
 
-  // Fall through to SSR - preserve the full URL with query parameters
+  // 2. Handle SSR and API routes
   const protocol = req.headers['x-forwarded-proto'] || 'http'
   const host = req.headers.host
   const fullUrl = `${protocol}://${host}${req.url}`
 
-  const request = new Request(fullUrl, {
+  // CRITICAL FIX: Added 'duplex' option for Node.js compatibility
+  const requestOptions = {
     method: req.method,
     headers: req.headers,
-    body: req.method !== 'GET' && req.method !== 'HEAD' ? req : undefined,
-  })
+    duplex: 'half', // Required for Node.js 20+
+  }
 
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    requestOptions.body = req
+  }
+
+  const request = new Request(fullUrl, requestOptions)
   const response = await app.fetch(request)
 
-  // Forward all headers including Set-Cookie
+  // Forward headers (including Clerk auth cookies)
   const headers = {}
   response.headers.forEach((value, key) => {
     headers[key] = value
   })
 
   res.writeHead(response.status, headers)
-
-  // Handle the response body properly
   const body = await response.arrayBuffer()
   res.end(Buffer.from(body))
 }).listen(port, () => {
